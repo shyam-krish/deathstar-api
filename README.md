@@ -1,0 +1,1 @@
+A Django REST API for the Deathstar Project
