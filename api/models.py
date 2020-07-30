@@ -1,11 +1,25 @@
 from django.db import models
 
+from django.utils.translation import gettext_lazy as _
 
-class Genre(models.Model):
-    name = models.CharField(max_length=255, unique=True)
+
+class User(models.Model):
+
+    USER_TYPES = [
+        ('DJ', 'DJ'),
+        ('SUPERFAN', 'Superfan'),
+        ('FAN', 'Fan'),
+    ]
+
+    spotify_id = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    phone = models.CharField(max_length=255, null=True, blank=True)
+    email = models.CharField(max_length=255, null=True, blank=True)
+    user_type = models.CharField(max_length=255, choices=USER_TYPES, default='FAN')
+    followers_total = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return self.name
+        return self.spotify_id + ' - ' + self.name
 
 
 class Artist(models.Model):
@@ -14,7 +28,6 @@ class Artist(models.Model):
     popularity = models.IntegerField(null=True, blank=True)
     followers_total = models.IntegerField(null=True, blank=True)
     insta_followers = models.IntegerField(null=True, blank=True)
-    genre = models.ManyToManyField(Genre, blank=True)
 
     def __str__(self):
         return self.name
@@ -26,7 +39,6 @@ class Album(models.Model):
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True, blank=True)
     popularity = models.IntegerField(null=True, blank=True)
     release_date = models.DateField(null=True, blank=True)
-    genre = models.ManyToManyField(Genre, blank=True)
 
     def __str__(self):
         return self.name + " - " + self.artist.name
@@ -39,7 +51,6 @@ class Track(models.Model):
     popularity = models.CharField(max_length=255, null=True, blank=True)
     album = models.ForeignKey(Album, on_delete=models.CASCADE, null=True, blank=True)
     duration_ms = models.IntegerField(null=True, blank=True)
-    genre = models.ManyToManyField(Genre, blank=True)
 
     #Audio Features
     key = models.IntegerField(null=True, blank=True)
@@ -58,3 +69,10 @@ class Track(models.Model):
     def __str__(self):
         return self.title + " - " + self.artist.name
 
+
+class UserTrack(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    track = models.ForeignKey(Track, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.user.name + " - " + self.track.title

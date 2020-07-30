@@ -1,19 +1,23 @@
-from django.shortcuts import render
-
-from .models import Artist, Album, Track
-from .serializers import ArtistSerializer, TrackSerializer
-
-from rest_framework import generics
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import AllowAny
+import json
+from pprint import pprint
 
 import spotipy
 import spotipy.util as util
-import json
-from pprint import pprint
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .models import Artist, Album, Track, User, UserTrack
+from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, UserSerializer, UserTrackSerializer
+
+
+class UserList(APIView):
+
+    def get(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
+
 
 class ArtistList(APIView):
 
@@ -22,11 +26,43 @@ class ArtistList(APIView):
         serializer = ArtistSerializer(artists, many=True)
         return Response(serializer.data)
 
+class AlbumList(APIView):
+
+    def get(self, request):
+        albums = Album.objects.all()
+        serializer = AlbumSerializer(albums, many=True)
+        return Response(serializer.data)
+
+
 class TrackList(APIView):
 
     def get(self, request):
         tracks = Track.objects.all()
         serializers = TrackSerializer(tracks, many=True)
+        return Response(serializers.data)
+
+
+class TrackForUser(APIView):
+
+    def post(self, request):
+        id = request.data.get('spotify_id')
+
+        userTrack = UserTrack.objects.filter(user__spotify_id__contains=id)
+        serializers = UserTrackSerializer(userTrack, many=True)
+
+        return Response(serializers.data)
+
+
+class SingleTrack(APIView):
+
+    def post(self, request):
+        id = request.data.get('spotify_id')
+
+        print(id)
+
+        track = Track.objects.filter(spotify_id=id)
+        serializers = TrackSerializer(track, many=True)
+
         return Response(serializers.data)
 
 
@@ -65,18 +101,55 @@ class Test(APIView):
             return Response("Already an Artist", status=status.HTTP_400_BAD_REQUEST)
 
 
-class SyncDbWithSpotifyLikedSongs(APIView):
+class SpotifyUser(APIView):
 
     def post(self, request):
-        scope = 'user-library-read'
+        scope = 'user-read-email'
         username = '1299958474'
         token = util.prompt_for_user_token(username, scope)
 
         if token:
             sp = spotipy.Spotify(auth=token)
+
+            user_result = sp.current_user()
+
+            json_response = json.dumps(user_result)
+            pprint(json_response)
+
+            print(user_result['display_name'])
+        else:
+            print("No token")
+
+        return Response("User Printed", status=status.HTTP_200_OK)
+
+
+class SyncDbWithSpotifyLikedSongs(APIView):
+
+    def post(self, request):
+        scope = 'user-library-read, user-read-email'
+        username = '1299958474'
+        token = util.prompt_for_user_token(username, scope)
+
+        if token:
+            sp = spotipy.Spotify(auth=token)
+
+            user_result = sp.current_user()
+
+            # CREATE USER #
+            user_spotify_id = user_result['id']
+            user_name = user_result['display_name']
+            user_email = user_result['email']
+
+            user_db, created = User.objects.get_or_create(
+                spotify_id=user_spotify_id,
+                defaults={'name': user_name,
+                          'email': user_email},
+            )
+
             results = sp.current_user_saved_tracks(limit=50)
             json_response = json.dumps(results)
             pprint(json_response)
+
             for item in results['items']:
                 track = item['track']
                 # json_response = json.dumps(track)
@@ -172,9 +245,13 @@ class SyncDbWithSpotifyLikedSongs(APIView):
                     )
 
                     print('here4')
-                    # print(audio_features)
-                    # print(track['name'] + ' - ' + track['artists'][0]['name'])
 
+
+                    # CREATE USER TRACK #
+                    user_track = UserTrack.objects.create(user=user_db, track=track_db)
+                    user_track.save()
+
+                    print('here5')
         else:
             print("Can't get token for", username)
 
@@ -187,9 +264,9 @@ class SyncDbWithSpotifyLikedSongs(APIView):
 
         if token:
             sp = spotipy.Spotify(auth=token)
-            results = sp.current_user_saved_tracks(limit=1)
-            # json_response = json.dumps(results)
-            # pprint(json_response)
+            results = sp.current_user_saved_tracks(limit=2)
+            json_response = json.dumps(results)
+            pprint(json_response)
             for item in results['items']:
                 track = item['track']
 
