@@ -152,9 +152,6 @@ class SyncDbWithSpotifyLikedSongs(APIView):
 
             for item in results['items']:
                 track = item['track']
-                # json_response = json.dumps(track)
-                # pprint(json_response)
-                print('first')
 
                 try:
                     track_queryset = Track.objects.get(spotify_id=track['id'])
@@ -178,7 +175,6 @@ class SyncDbWithSpotifyLikedSongs(APIView):
                                   'followers_total': artist_followers_total},
                     )
 
-                    # if track['album']['album_type'] != 'single':
                     print('here2')
 
                     # CREATE ALBUM #
@@ -245,7 +241,6 @@ class SyncDbWithSpotifyLikedSongs(APIView):
                     )
 
                     print('here4')
-
 
                     # CREATE USER TRACK #
                     user_track = UserTrack.objects.create(user=user_db, track=track_db)
