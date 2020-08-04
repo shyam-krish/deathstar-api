@@ -14,4 +14,5 @@ urlpatterns = [
     path('curate-playlist/', views.CuratePlaylist.as_view(), name='curate-playlist'),
     path('create-playlist/', views.CreateSpotifyPlaylist.as_view()),
     path('test/', views.Test.as_view(), name='test'),
+    path('get-spotify-user-info/', views.GetSpotifyUser.as_view(), name='get-spotify-user-info')
 ]

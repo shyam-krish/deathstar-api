@@ -3,6 +3,8 @@ from pprint import pprint
 
 import spotipy
 import spotipy.util as util
+from spotipy.oauth2 import SpotifyOAuth
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -349,6 +351,21 @@ class CreateSpotifyPlaylist(APIView):
             sp.user_playlist_create(username, name="Test Playlist", public=False, description="this is dope")
         return Response("created playlists", status=status.HTTP_200_OK)
 
+
+class GetSpotifyUser(APIView):
+
+    def get(self, request):
+        scope = 'user-read-email'
+        username = '1299958474'
+
+        OAuth = SpotifyOAuth(scope=scope, username=username)
+
+        sp = spotipy.Spotify(auth_manager=OAuth)
+
+        results = sp.current_user()
+        print(results)
+
+        return Response("Info Printed", status=status.HTTP_200_OK)
 
 
 
