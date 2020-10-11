@@ -68,50 +68,20 @@ class SingleTrack(APIView):
         return Response(serializers.data)
 
 
-class Test(APIView):
-
-    def get(self, request):
-        try:
-            track = Track.objects.get(spotify_id=10)
-            print('hi')
-        except Track.DoesNotExist:
-            track = None
-            print('bye')
-
-        serializer = TrackSerializer(track)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def post(self, request):
-        spotify_id = '3'
-        name = 'Shyam'
-        popularity = '100'
-        followers_total = '1000'
-
-        obj, created = Artist.objects.get_or_create(
-            spotify_id=spotify_id,
-            defaults={'name': name,
-                      'popularity': popularity,
-                      'followers_total': followers_total},
-        )
-
-        print(obj)
-
-        if created:
-            return Response(obj, status=status.HTTP_201_CREATED)
-        else:
-            return Response("Already an Artist", status=status.HTTP_400_BAD_REQUEST)
-
-
 class SpotifyUser(APIView):
 
     def post(self, request):
+        caches_path = './spotify-caches/.cache-123'
         scope = 'user-read-email'
-        username = '1299958474'
-        token = util.prompt_for_user_token(username, scope)
+
+        auth_manager = SpotifyOAuth(scope=scope,
+                                    cache_path=caches_path,
+                                    show_dialog=True)
+
+        token = auth_manager.get_cached_token()
 
         if token:
-            sp = spotipy.Spotify(auth=token)
+            sp = spotipy.Spotify(auth_manager=auth_manager)
 
             user_result = sp.current_user()
 
@@ -128,13 +98,18 @@ class SpotifyUser(APIView):
 class SyncDbWithSpotifyLikedSongs(APIView):
 
     def post(self, request):
+        caches_path = '/.cache-123'
         scope = 'user-library-read, user-read-email'
-        username = '1299958474'
-        token = util.prompt_for_user_token(username, scope)
 
-        if token:
-            sp = spotipy.Spotify(auth=token)
+        auth_manager = SpotifyOAuth(scope=scope,
+                                    cache_path=caches_path,
+                                    show_dialog=True)
 
+        auth_manager.get_cached_token()
+
+        sp = spotipy.Spotify(auth_manager=auth_manager)
+
+        if sp:
             user_result = sp.current_user()
 
             # CREATE USER #
@@ -250,7 +225,8 @@ class SyncDbWithSpotifyLikedSongs(APIView):
 
                     print('here5')
         else:
-            print("Can't get token for", username)
+            print("No token")
+            return Response("No token", status=status.HTTP_200_OK)
 
         return Response("Added Songs", status=status.HTTP_200_OK)
 
@@ -308,26 +284,35 @@ class CuratePlaylist(APIView):
         print(spotify_ids)
         print('\n')
 
+        caches_path = '/.cache-123'
         scope = 'user-library-read, playlist-read-collaborative, playlist-modify-public, playlist-read-private, playlist-modify-private'
-        username = '1299958474'
-        token = util.prompt_for_user_token(username, scope)
 
-        if token:
-            sp = spotipy.Spotify(auth=token)
+        auth_manager = SpotifyOAuth(scope=scope,
+                                    cache_path=caches_path,
+                                    show_dialog=True)
+
+        auth_manager.get_cached_token()
+
+        sp = spotipy.Spotify(auth_manager=auth_manager)
+
+        if sp:
+            user_result = sp.current_user()
+
+            user_spotify_id = user_result['id']
 
             is_public = True if public == 'True' else False
 
-            sp.user_playlist_create(username, name=playlist_name, public=is_public, description=playlist_description)
+            sp.user_playlist_create(user_spotify_id, name=playlist_name, public=is_public, description=playlist_description)
             print('playlist created')
             print('\n')
 
-            results = sp.user_playlists(username, limit=20)
+            results = sp.user_playlists(user_spotify_id, limit=20)
 
             for item in results['items']:
                 my_playlists_name = item['name']
                 if my_playlists_name == playlist_name:
                     my_playlists_id = item['id']
-                    sp.user_playlist_add_tracks(username, my_playlists_id, spotify_ids)
+                    sp.user_playlist_add_tracks(user_spotify_id, my_playlists_id, spotify_ids)
 
                     print(my_playlists_id)
 
@@ -350,27 +335,4 @@ class CreateSpotifyPlaylist(APIView):
 
             sp.user_playlist_create(username, name="Test Playlist", public=False, description="this is dope")
         return Response("created playlists", status=status.HTTP_200_OK)
-
-
-class GetSpotifyUser(APIView):
-
-    def get(self, request):
-        scope = 'user-read-email'
-        username = '1299958474'
-
-        OAuth = SpotifyOAuth(scope=scope, username=username)
-
-        sp = spotipy.Spotify(auth_manager=OAuth)
-
-        results = sp.current_user()
-        print(results)
-
-        return Response("Info Printed", status=status.HTTP_200_OK)
-
-
-
-
-
-
-
 
