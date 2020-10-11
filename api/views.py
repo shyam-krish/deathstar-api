@@ -71,18 +71,18 @@ class SingleTrack(APIView):
 class SpotifyUser(APIView):
 
     def post(self, request):
-        caches_path = './spotify-caches/.cache-123'
+        caches_path = './.cache-123'
         scope = 'user-read-email'
 
         auth_manager = SpotifyOAuth(scope=scope,
                                     cache_path=caches_path,
                                     show_dialog=True)
 
-        token = auth_manager.get_cached_token()
+        auth_manager.get_cached_token()
 
-        if token:
-            sp = spotipy.Spotify(auth_manager=auth_manager)
+        sp = spotipy.Spotify(auth_manager=auth_manager)
 
+        if sp:
             user_result = sp.current_user()
 
             json_response = json.dumps(user_result)
