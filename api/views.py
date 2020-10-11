@@ -80,10 +80,15 @@ class SpotifyUser(APIView):
 
         auth_manager.get_cached_token()
 
+        print(auth_manager.get_authorize_url())
+        print('here1')
+
         sp = spotipy.Spotify(auth_manager=auth_manager)
+        print('here2')
 
         if sp:
             user_result = sp.current_user()
+            print('here3')
 
             json_response = json.dumps(user_result)
             pprint(json_response)
