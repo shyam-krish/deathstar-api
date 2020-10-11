@@ -81,6 +81,7 @@ class SpotifyUser(APIView):
         auth_manager.get_cached_token()
 
         print(auth_manager.get_authorize_url())
+        print(auth_manager.client_id)
         print('here1')
 
         sp = spotipy.Spotify(auth_manager=auth_manager)
