@@ -1,13 +1,13 @@
 import json
+import webbrowser
 from pprint import pprint
 
 import spotipy
 import spotipy.util as util
-from spotipy.oauth2 import SpotifyOAuth
-
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from spotipy.oauth2 import SpotifyOAuth
 
 from .models import Artist, Album, Track, User, UserTrack
 from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, UserSerializer, UserTrackSerializer
@@ -88,6 +88,14 @@ class SpotifyUser(APIView):
         print('here2')
 
         if sp:
+            auth_url = auth_manager.get_authorize_url()
+            print(auth_manager.get_authorize_url())
+
+            try:
+                webbrowser.open(auth_url)
+            except webbrowser.Error:
+                return Response("Error opening browser", status=status.HTTP_400_BAD_REQUEST)
+
             user_result = sp.current_user()
             print('here3')
 
