@@ -92,7 +92,9 @@ class SpotifyUser(APIView):
             print(auth_manager.get_authorize_url())
 
             try:
-                webbrowser.open(auth_url)
+                print('here4')
+                webbrowser.open(url=auth_url, new=1, autoraise=True)
+                print('here5')
             except webbrowser.Error:
                 return Response("Error opening browser", status=status.HTTP_400_BAD_REQUEST)
 
