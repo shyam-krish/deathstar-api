@@ -17,6 +17,8 @@ from rest_framework.renderers import TemplateHTMLRenderer, StaticHTMLRenderer
 from .models import Artist, Album, Track, User, UserTrack
 from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, UserSerializer, UserTrackSerializer, UrlSerializer
 
+dev_url = 'http://127.0.0.1:8000'
+prod_url = 'https://chopshop-api.herokuapp.com'
 
 class UserList(APIView):
 
@@ -396,7 +398,7 @@ class CallbackStaticRender(APIView):
         if code:
             print('here1')
             auth_manager.get_access_token(code=code)
-            return HttpResponseRedirect(redirect_to='http://127.0.0.1:8000/api/v1/callback/')
+            return HttpResponseRedirect(redirect_to=dev_url + '/api/v1/callback/')
 
         if not auth_manager.get_cached_token():
             # Step 2. Display sign in link when no token
