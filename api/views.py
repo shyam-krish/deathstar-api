@@ -1,4 +1,5 @@
 import json
+import os
 import webbrowser
 from pprint import pprint
 
@@ -405,14 +406,18 @@ class CallbackStaticRender(APIView):
             print('here2')
             auth_url = auth_manager.get_authorize_url()
             print(auth_url)
-            data = '<html><body><h2>' + auth_url + '</h2></body></html>'
+
+            data = f'<h2><a href="{auth_url}">Sign in</a></h2>'
             return Response(data)
 
         print('here3')
         spotify = spotipy.Spotify(auth_manager=auth_manager)
         user_result = spotify.current_user()
 
-        display_name = user_result['display_name']
+        if os.path.exists(caches_path):
+            print('removing file1')
+            os.remove(caches_path)
 
+        display_name = user_result['display_name']
         data = '<html><body><h1>Hello ' + display_name + '</h1></body></html>'
         return Response(data)
