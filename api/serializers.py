@@ -45,3 +45,9 @@ class UserTrackSerializer(serializers.ModelSerializer):
         fields = ('user', 'track')
 
 
+class UrlSerializer(serializers.Serializer):
+    url = serializers.CharField()
+
+
+
+

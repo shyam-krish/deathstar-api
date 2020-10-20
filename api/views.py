@@ -9,8 +9,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from spotipy.oauth2 import SpotifyOAuth
 
+from django.http import HttpResponseRedirect
+from rest_framework.reverse import reverse
+
+from rest_framework.renderers import TemplateHTMLRenderer, StaticHTMLRenderer
+
 from .models import Artist, Album, Track, User, UserTrack
-from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, UserSerializer, UserTrackSerializer
+from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, UserSerializer, UserTrackSerializer, UrlSerializer
 
 
 class UserList(APIView):
@@ -334,6 +339,7 @@ class CuratePlaylist(APIView):
 
         return Response("Playlist Curated and Created", status=status.HTTP_200_OK)
 
+
 class CreateSpotifyPlaylist(APIView):
 
     def post(self, request):
@@ -352,3 +358,59 @@ class CreateSpotifyPlaylist(APIView):
             sp.user_playlist_create(username, name="Test Playlist", public=False, description="this is dope")
         return Response("created playlists", status=status.HTTP_200_OK)
 
+
+class Redirect(APIView):
+
+    def post(self, request):
+        caches_path = './.cache-123'
+        scope = 'user-read-email'
+
+        auth_manager = SpotifyOAuth(scope=scope,
+                                    cache_path=caches_path,
+                                    show_dialog=True)
+
+        url = {'url': auth_manager.get_authorize_url()}
+        serializer = UrlSerializer(url)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class Http(APIView):
+
+    def get(self, request):
+        return HttpResponseRedirect(redirect_to='http://127.0.0.1:8000/api/v1/callback/')
+
+
+class CallbackStaticRender(APIView):
+    renderer_classes = [StaticHTMLRenderer]
+
+    def get(self, request):
+        caches_path = './.cache123'
+        scope = 'user-read-email'
+
+        auth_manager = SpotifyOAuth(scope=scope,
+                                    cache_path=caches_path,
+                                    show_dialog=True)
+
+        code = self.request.query_params.get('code')
+        if code:
+            print('here1')
+            auth_manager.get_access_token(code=code)
+            return HttpResponseRedirect(redirect_to='http://127.0.0.1:8000/api/v1/callback/')
+
+        if not auth_manager.get_cached_token():
+            # Step 2. Display sign in link when no token
+            print('here2')
+            auth_url = auth_manager.get_authorize_url()
+            print(auth_url)
+            data = '<html><body><h2>' + auth_url + '</h2></body></html>'
+            return Response(data)
+
+        print('here3')
+        spotify = spotipy.Spotify(auth_manager=auth_manager)
+        user_result = spotify.current_user()
+
+        display_name = user_result['display_name']
+
+        data = '<html><body><h1>Hello ' + display_name + '</h1></body></html>'
+        return Response(data)

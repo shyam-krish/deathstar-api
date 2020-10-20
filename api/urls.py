@@ -13,4 +13,7 @@ urlpatterns = [
     path('sync-with-spotify/', views.SyncDbWithSpotifyLikedSongs.as_view(), name='sync-db-with-spotify'),
     path('curate-playlist/', views.CuratePlaylist.as_view(), name='curate-playlist'),
     path('create-playlist/', views.CreateSpotifyPlaylist.as_view()),
+    path('redirect/', views.Redirect.as_view()),
+    path('http-redirect/', views.Http.as_view()),
+    path('callback/', views.CallbackStaticRender.as_view()),
 ]
