@@ -419,5 +419,5 @@ class CallbackStaticRender(APIView):
             os.remove(caches_path)
 
         display_name = user_result['display_name']
-        data = '<html><body><h1>Hello ' + display_name + '</h1></body></html>'
+        data = '<html><body><h1>Hello ' + display_name + '. You are connected to Spotify :) </h1></body></html>'
         return Response(data)
