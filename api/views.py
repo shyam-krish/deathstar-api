@@ -398,14 +398,14 @@ class CallbackStaticRender(APIView):
         if code:
             print('here1')
             auth_manager.get_access_token(code=code)
-            return HttpResponseRedirect(redirect_to=dev_url + '/api/v1/callback/')
+            return HttpResponseRedirect(redirect_to=prod_url + '/api/v1/callback/')
 
         if not auth_manager.get_cached_token():
             # Step 2. Display sign in link when no token
             print('here2')
             auth_url = auth_manager.get_authorize_url()
             print(auth_url)
-            data = '<html><body><h2>' + prod_url + '</h2></body></html>'
+            data = '<html><body><h2>' + auth_url + '</h2></body></html>'
             return Response(data)
 
         print('here3')
