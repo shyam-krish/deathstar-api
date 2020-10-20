@@ -405,7 +405,7 @@ class CallbackStaticRender(APIView):
             print('here2')
             auth_url = auth_manager.get_authorize_url()
             print(auth_url)
-            data = '<html><body><h2>' + auth_url + '</h2></body></html>'
+            data = '<html><body><h2>' + prod_url + '</h2></body></html>'
             return Response(data)
 
         print('here3')
