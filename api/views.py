@@ -153,103 +153,122 @@ class SyncDbWithSpotifyLikedSongs(APIView):
             json_response = json.dumps(results)
             pprint(json_response)
 
-            for item in results['items']:
-                track = item['track']
+            offset = 0
+            count = 50
+            final_count = 0
 
-                try:
-                    track_queryset = Track.objects.get(spotify_id=track['id'])
-                except Track.DoesNotExist:
-                    track_queryset = None
+            while count == 50:
+                count = 0
+                results = sp.current_user_saved_tracks(limit=50, offset=offset)
 
-                if track_queryset is None:
-                    print('here1')
+                for item in results['items']:
+                    track = item['track']
+                    count += 1
+                    final_count += 1
+                    print('Count: ' + count.__str__())
+                    print('Final Count: ' + final_count.__str__())
 
-                    # CREATE ARTIST #
-                    artist_spotify_id = track['artists'][0]['id']
-                    artist = sp.artist(artist_spotify_id)
-                    artist_name = artist['name']
-                    artist_popularity = artist['popularity']
-                    artist_followers_total = artist['followers']['total']
+                    try:
+                        track_queryset = Track.objects.get(spotify_id=track['id'])
+                    except Track.DoesNotExist:
+                        track_queryset = None
 
-                    artist_db, created = Artist.objects.get_or_create(
-                        spotify_id=artist_spotify_id,
-                        defaults={'name': artist_name,
-                                  'popularity': artist_popularity,
-                                  'followers_total': artist_followers_total},
-                    )
+                    if track_queryset:
+                        try:
+                            print('Getting User Track')
+                            user_track = UserTrack.objects.get(user=user_db, track=track_queryset)
+                        except UserTrack.DoesNotExist:
+                            print('user track does not exist')
+                            user_track = UserTrack(user=user_db, track=track_queryset)
+                            user_track.save()
 
-                    print('here2')
+                    if track_queryset is None:
+                        print('here1')
 
-                    # CREATE ALBUM #
-                    album_spotify_id = track['album']['id']
-                    album = sp.album(album_spotify_id)
-                    album_name = album['name']
-                    album_popularity = album['popularity']
-                    album_release_date = album['release_date']
+                        # CREATE ARTIST #
+                        artist_spotify_id = track['artists'][0]['id']
+                        artist = sp.artist(artist_spotify_id)
+                        artist_name = artist['name']
+                        artist_popularity = artist['popularity']
+                        artist_followers_total = artist['followers']['total']
 
-                    album_db, created = Album.objects.get_or_create(
-                        spotify_id=album_spotify_id,
-                        defaults={'name': album_name,
-                                  'artist': artist_db,
-                                  'popularity': album_popularity},
-                    )
+                        artist_db, created = Artist.objects.get_or_create(
+                            spotify_id=artist_spotify_id,
+                            defaults={'name': artist_name,
+                                      'popularity': artist_popularity,
+                                      'followers_total': artist_followers_total},
+                        )
 
-                    print('here3')
+                        print('here2')
 
-                    # CREATE TRACK #
-                    track_spotify_id = track['id']
-                    track_title = track['name']
-                    track_popularity = track['popularity']
-                    track_duration_ms = track['duration_ms']
+                        # CREATE ALBUM #
+                        album_spotify_id = track['album']['id']
+                        album = sp.album(album_spotify_id)
+                        album_name = album['name']
+                        album_popularity = album['popularity']
+                        album_release_date = album['release_date']
 
-                    print(track_title)
-                    print(track_popularity)
-                    print(track_duration_ms)
+                        album_db, created = Album.objects.get_or_create(
+                            spotify_id=album_spotify_id,
+                            defaults={'name': album_name,
+                                      'artist': artist_db,
+                                      'popularity': album_popularity},
+                        )
 
-                    audio_features_list = sp.audio_features([track_spotify_id])
-                    audio_features = audio_features_list[0]
+                        print('here3')
 
-                    track_key = audio_features['key']
-                    track_mode = audio_features['mode']
-                    track_time_signature = audio_features['time_signature']
-                    track_acousticness = audio_features['acousticness']
-                    track_danceability = audio_features['danceability']
-                    track_energy = audio_features['energy']
-                    track_instrumentalness = audio_features['instrumentalness']
-                    track_liveness = audio_features['liveness']
-                    track_loudness = audio_features['loudness']
-                    track_speechiness = audio_features['speechiness']
-                    track_valence = audio_features['valence']
-                    track_tempo = audio_features['tempo']
+                        # CREATE TRACK #
+                        track_spotify_id = track['id']
+                        track_title = track['name']
+                        track_popularity = track['popularity']
+                        track_duration_ms = track['duration_ms']
 
-                    track_db, created = Track.objects.get_or_create(
-                        spotify_id=track_spotify_id,
-                        defaults={'title': track_title,
-                                  'popularity': track_popularity,
-                                  'duration_ms': track_duration_ms,
-                                  'artist': artist_db,
-                                  'album': album_db,
-                                  'key': track_key,
-                                  'mode': track_mode,
-                                  'time_signature': track_time_signature,
-                                  'acousticness': track_acousticness,
-                                  'danceability': track_danceability,
-                                  'energy': track_energy,
-                                  'instrumentalness': track_instrumentalness,
-                                  'liveness': track_liveness,
-                                  'loudness': track_loudness,
-                                  'speechiness': track_speechiness,
-                                  'valence': track_valence,
-                                  'tempo': track_tempo},
-                    )
+                        audio_features_list = sp.audio_features([track_spotify_id])
+                        audio_features = audio_features_list[0]
 
-                    print('here4')
+                        track_key = audio_features['key']
+                        track_mode = audio_features['mode']
+                        track_time_signature = audio_features['time_signature']
+                        track_acousticness = audio_features['acousticness']
+                        track_danceability = audio_features['danceability']
+                        track_energy = audio_features['energy']
+                        track_instrumentalness = audio_features['instrumentalness']
+                        track_liveness = audio_features['liveness']
+                        track_loudness = audio_features['loudness']
+                        track_speechiness = audio_features['speechiness']
+                        track_valence = audio_features['valence']
+                        track_tempo = audio_features['tempo']
 
-                    # CREATE USER TRACK #
-                    user_track = UserTrack.objects.create(user=user_db, track=track_db)
-                    user_track.save()
+                        track_db, created = Track.objects.get_or_create(
+                            spotify_id=track_spotify_id,
+                            defaults={'title': track_title,
+                                      'popularity': track_popularity,
+                                      'duration_ms': track_duration_ms,
+                                      'artist': artist_db,
+                                      'album': album_db,
+                                      'key': track_key,
+                                      'mode': track_mode,
+                                      'time_signature': track_time_signature,
+                                      'acousticness': track_acousticness,
+                                      'danceability': track_danceability,
+                                      'energy': track_energy,
+                                      'instrumentalness': track_instrumentalness,
+                                      'liveness': track_liveness,
+                                      'loudness': track_loudness,
+                                      'speechiness': track_speechiness,
+                                      'valence': track_valence,
+                                      'tempo': track_tempo},
+                        )
 
-                    print('here5')
+                        print('here4')
+
+                        # CREATE USER TRACK #
+                        user_track = UserTrack.objects.create(user=user_db, track=track_db)
+                        user_track.save()
+
+                        print('here5')
+
+                offset += 50
         else:
             print("No token")
             return Response("No token", status=status.HTTP_200_OK)
