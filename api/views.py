@@ -417,5 +417,10 @@ class CallbackStaticRender(APIView):
         user_result = spotify.current_user()
 
         display_name = user_result['display_name']
-        data = '<html><body><h1>Hello ' + display_name + '. You are connected to Spotify :) </h1></body></html>'
+        client_url = 'https://chopshop-client.herokuapp.com/'
+
+        data = '<html><body><h1>Hello ' + display_name + '. You are connected to Spotify :) </h1>'
+        data += f'<h2><a href="{client_url}">Now click here!</a></h2>'
+        data += '</body></html>'
+        
         return Response(data)
