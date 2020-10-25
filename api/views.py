@@ -5,18 +5,16 @@ from pprint import pprint
 
 import spotipy
 import spotipy.util as util
+from django.http import HttpResponseRedirect
 from rest_framework import status
+from rest_framework.renderers import StaticHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from spotipy.oauth2 import SpotifyOAuth
 
-from django.http import HttpResponseRedirect
-from rest_framework.reverse import reverse
-
-from rest_framework.renderers import TemplateHTMLRenderer, StaticHTMLRenderer
-
 from .models import Artist, Album, Track, User, UserTrack
-from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, UserSerializer, UserTrackSerializer, UrlSerializer
+from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, UserSerializer, UserTrackSerializer, \
+    UrlSerializer
 
 dev_url = 'http://127.0.0.1:8000'
 prod_url = 'https://chopshop-api.herokuapp.com'
