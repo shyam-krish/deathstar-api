@@ -157,7 +157,7 @@ class SyncDbWithSpotifyLikedSongs(APIView):
             count = 50
             final_count = 0
 
-            while count == 50:
+            while count == 50 and offset < 350:
                 count = 0
                 results = sp.current_user_saved_tracks(limit=50, offset=offset)
 
