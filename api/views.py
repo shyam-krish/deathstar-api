@@ -19,6 +19,7 @@ from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, Use
 dev_url = 'http://127.0.0.1:8000'
 prod_url = 'https://chopshop-api.herokuapp.com'
 
+
 class UserList(APIView):
 
     def get(self, request):
@@ -120,14 +121,17 @@ class SpotifyUser(APIView):
 class SyncDbWithSpotifyLikedSongs(APIView):
 
     def post(self, request):
-        caches_path = '/.cache123'
+        caches_path = './.cache123'
         scope = 'user-library-read, user-read-email'
 
         auth_manager = SpotifyOAuth(scope=scope,
                                     cache_path=caches_path,
                                     show_dialog=True)
 
-        auth_manager.get_cached_token()
+        #auth_manager.get_cached_token()
+
+        if os.path.exists(caches_path):
+            print('file exists')
 
         sp = spotipy.Spotify(auth_manager=auth_manager)
 
@@ -368,7 +372,7 @@ class CallbackStaticRender(APIView):
 
     def get(self, request):
         caches_path = './.cache123'
-        scope = 'user-read-email'
+        scope = 'user-library-read, user-read-email'
 
         auth_manager = SpotifyOAuth(scope=scope,
                                     cache_path=caches_path,
