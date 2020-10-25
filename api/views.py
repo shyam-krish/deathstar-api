@@ -122,7 +122,7 @@ class SpotifyUser(APIView):
 class SyncDbWithSpotifyLikedSongs(APIView):
 
     def post(self, request):
-        caches_path = '/.cache-123'
+        caches_path = '/.cache123'
         scope = 'user-library-read, user-read-email'
 
         auth_manager = SpotifyOAuth(scope=scope,
@@ -252,31 +252,12 @@ class SyncDbWithSpotifyLikedSongs(APIView):
             print("No token")
             return Response("No token", status=status.HTTP_200_OK)
 
+        if os.path.exists(caches_path):
+            print('removing file')
+            os.remove(caches_path)
+
         return Response("Added Songs", status=status.HTTP_200_OK)
 
-    def get(self, response):
-        scope = 'user-library-read'
-        username = '1299958474'
-        token = util.prompt_for_user_token(username, scope)
-
-        if token:
-            sp = spotipy.Spotify(auth=token)
-            results = sp.current_user_saved_tracks(limit=2)
-            json_response = json.dumps(results)
-            pprint(json_response)
-            for item in results['items']:
-                track = item['track']
-
-                track_name = track['name']
-                print(track_name)
-
-                track_spotify_id = track['id']
-                audio_features = sp.audio_features([track_spotify_id])
-
-                track_key = audio_features[0]['key']
-                print(track_key)
-
-                return Response(audio_features, status=status.HTTP_200_OK)
 
 class CuratePlaylist(APIView):
 
@@ -413,10 +394,6 @@ class CallbackStaticRender(APIView):
         print('here3')
         spotify = spotipy.Spotify(auth_manager=auth_manager)
         user_result = spotify.current_user()
-
-        if os.path.exists(caches_path):
-            print('removing file1')
-            os.remove(caches_path)
 
         display_name = user_result['display_name']
         data = '<html><body><h1>Hello ' + display_name + '. You are connected to Spotify :) </h1></body></html>'
