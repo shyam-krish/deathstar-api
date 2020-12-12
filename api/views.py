@@ -14,7 +14,7 @@ from spotipy.oauth2 import SpotifyOAuth
 
 from .models import Artist, Album, Track, User, UserTrack
 from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, UserSerializer, UserTrackSerializer, \
-    UrlSerializer
+    UrlSerializer, UserTrackTrackSerializer
 
 dev_url = 'http://127.0.0.1:8000'
 prod_url = 'https://chopshop-api.herokuapp.com'
@@ -56,8 +56,8 @@ class TrackForUser(APIView):
     def post(self, request):
         id = request.data.get('spotify_id')
 
-        userTrack = UserTrack.objects.filter(user__spotify_id__contains=id)
-        serializers = UserTrackSerializer(userTrack, many=True)
+        user_track = UserTrack.objects.filter(user__spotify_id__contains=id)
+        serializers = UserTrackTrackSerializer(user_track, many=True)
 
         return Response(serializers.data)
 

@@ -45,6 +45,14 @@ class UserTrackSerializer(serializers.ModelSerializer):
         fields = ('user', 'track')
 
 
+class UserTrackTrackSerializer(serializers.Serializer):
+    track = TrackSerializer()
+
+    class Meta:
+        model = UserTrack
+        fields = ('track.title')
+
+
 class UrlSerializer(serializers.Serializer):
     url = serializers.CharField()
 
