@@ -5,7 +5,6 @@
 .git
 .cache*
 .DS_Store
-.ebextensions
 .idea
 env
 
