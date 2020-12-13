@@ -27,7 +27,7 @@ SECRET_KEY = 'bsb^$=2l+zxu%%()k^m9g(hsug3tjag%%7%!ogb@)ph$pruv8b'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '*'
+    '*', 'chopshop-env.eba-mcczkmdq.us-east-1.elasticbeanstalk.com'
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True

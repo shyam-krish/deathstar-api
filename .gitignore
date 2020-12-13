@@ -2,12 +2,15 @@
 *.sqlite3
 *.pyc
 *~
-.*
+.git
+.cache*
+.DS_Store
+.ebextensions
+.idea
 env
 
 # Accept these files in the repository
 !.gitignore
 # Elastic Beanstalk Files
-.elasticbeanstalk/*
-!.elasticbeanstalk/*.cfg.yml
-!.elasticbeanstalk/*.global.yml
+!.elasticbeanstalk/*
+
