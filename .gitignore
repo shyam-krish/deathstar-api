@@ -7,7 +7,7 @@
 .DS_Store
 .idea
 env
-migrations.*
+api/migrations/*
 
 # Accept these files in the repository
 !.gitignore
