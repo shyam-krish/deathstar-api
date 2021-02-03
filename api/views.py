@@ -122,7 +122,7 @@ class SyncDbWithSpotifyLikedSongs(APIView):
 
     def post(self, request):
         caches_path = './.cache123'
-        scope = 'user-library-read, user-read-email'
+        scope = 'user-library-read, user-read-email, user-top-read'
 
         auth_manager = SpotifyOAuth(scope=scope,
                                     cache_path=caches_path,
@@ -149,17 +149,20 @@ class SyncDbWithSpotifyLikedSongs(APIView):
                           'email': user_email},
             )
 
-            results = sp.current_user_saved_tracks(limit=50)
-            json_response = json.dumps(results)
-            pprint(json_response)
-
-            offset = 0
-            count = 50
+            # results = sp.current_user_saved_tracks(limit=50)
+            # json_response = json.dumps(results)
+            # pprint(json_response)
+            #
+            # offset = 0
+            # count = 50
             final_count = 0
 
-            while count == 50 and offset < 350:
-                count = 0
-                results = sp.current_user_saved_tracks(limit=50, offset=offset)
+            count = 0
+
+            #while count == 50 and offset < 350:
+            while count < 21:
+               #results = sp.current_user_saved_tracks(limit=50, offset=offset)
+                results = sp.current_user_top_tracks(time_range="short_term")
 
                 for item in results['items']:
                     track = item['track']
@@ -268,7 +271,7 @@ class SyncDbWithSpotifyLikedSongs(APIView):
 
                         print('here5')
 
-                offset += 50
+                #offset += 50
         else:
             print("No token")
             return Response("No token", status=status.HTTP_200_OK)
