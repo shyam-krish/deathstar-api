@@ -11,7 +11,8 @@ GENRES = ['dance-electronic','r-and-b','hip-hop','world','rap','jazz']
 
 #--------------Grab all chart categories, and initialize the script to 
 today = datetime.today()
-
+NULL_GENRES = ['country','contemporary', 'rock','alternative','tropical','mexican','christian', 'gospel','classical','new-age',
+               'blues','folk','reggae','bluegrass','cast','comedy','canadian']
 if today.month ==12:
     final_year = today.year + 1
 else: 
@@ -25,10 +26,11 @@ years = list(range(2010,final_year))
 
 #--------------Loops through all the different chart types
 for YEC_Cat in ALL_YEAREND_CHART_CATEGORIES:
+    
     for ty in TYPES:
         #--------------Filters down to only releavant charts (Artists, Producers, Albums, Songs)
-        if ty in YEC_Cat and 'imprints' not in YEC_Cat and 'label' not in YEC_Cat:
-           
+        if ty in YEC_Cat and 'imprints' not in YEC_Cat and 'label' not in YEC_Cat and not any(gen in YEC_Cat for gen in NULL_GENRES):
+            print(YEC_Cat)
             YEC_SQL_Dict ={}
             #--------------For each year, grabs that chart's attributes and corresponding entries and enters them into the database
             for year in years:
