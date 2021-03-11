@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Artist, Album, Track, User, UserTrack
+from .models import Artist, Album, Track, User, UserTrack, Songs
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -55,6 +55,16 @@ class UserTrackTrackSerializer(serializers.Serializer):
 
 class UrlSerializer(serializers.Serializer):
     url = serializers.CharField()
+
+
+class SongsSerializer(serializers.ModelSerializer):
+    artist = ArtistSerializer()
+    album = AlbumSerializer()
+
+    class Meta:
+        model = Songs
+        fields = ('id', 'title', 'artist', 'album', 'filepath', 'spotify_id', 'billboard', 'year',
+                  'bpm', 'duration_ms')
 
 
 

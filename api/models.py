@@ -76,3 +76,16 @@ class UserTrack(models.Model):
 
     def __str__(self):
         return self.user.name + " - " + self.track.title
+
+class Songs(models.Model):
+    title = models.CharField(max_length=255, null=True, blank=True)
+    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True, blank=True)
+    album = models.ForeignKey(Album, on_delete=models.CASCADE, null=True, blank=True)
+    filepath = models.CharField(max_length=255, null=True, blank=True)
+    spotify_id = models.CharField(max_length=255, unique=True)
+    billboard = models.BooleanField(default=False)
+    year = models.CharField(max_length=4, null=True, blank=True)
+    bpm = models.FloatField(blank=True, null=True)
+    duration_ms = models.IntegerField(null=True, blank=True)
+
+
