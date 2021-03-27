@@ -1,7 +1,4 @@
-import json
 import os
-import webbrowser
-from pprint import pprint
 
 import spotipy
 import spotipy.util as util
@@ -12,14 +9,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from spotipy.oauth2 import SpotifyOAuth
 
-from .models import Artist, Album, Track, User, UserTrack
-from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, UserSerializer, UserTrackSerializer, \
-    UrlSerializer, UserTrackTrackSerializer
+from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, UserSerializer, UrlSerializer, \
+    UserTrackTrackSerializer
 from .utils import *
 
 dev_url = 'http://127.0.0.1:8000'
 prod_url = 'https://chopshop-api.herokuapp.com'
-
 
 class UserList(APIView):
 
@@ -164,11 +159,11 @@ class SyncDbWithSpotifyLikedSongs(APIView):
         return Response("Added Songs", status=status.HTTP_200_OK)
 
 
-class SyncDbWithSpotifyUserTopSongs(APIView):
+class SyncSpotifyUserTopTracks(APIView):
 
     def post(self, request):
         caches_path = './.cache123'
-        scope = 'user-library-read, user-read-email, user-top-read'
+        scope = 'user-read-email, user-top-read'
 
         auth_manager = SpotifyOAuth(scope=scope,
                                     cache_path=caches_path,
@@ -182,7 +177,7 @@ class SyncDbWithSpotifyUserTopSongs(APIView):
         if sp:
             user = create_spotify_user(spotipy=sp)
 
-            results = sp.current_user_top_tracks(limit=1, time_range="short_term")
+            results = sp.current_user_top_tracks(limit=10, time_range="short_term")
             print(results)
 
             for item in results['items']:
@@ -208,6 +203,61 @@ class SyncDbWithSpotifyUserTopSongs(APIView):
                     create_user_track(user=user, track=created_track)
 
                     print('here2')
+
+        else:
+            print("No token")
+            return Response("No token", status=status.HTTP_200_OK)
+
+        if os.path.exists(caches_path):
+            print('removing file')
+            os.remove(caches_path)
+
+        return Response("Added Top Songs For User", status=status.HTTP_200_OK)
+
+
+class SyncSpotifyUserTopSongs(APIView):
+
+    def post(self, request):
+        caches_path = './.cache123'
+        scope = 'user-read-email, user-top-read'
+
+        auth_manager = SpotifyOAuth(scope=scope,
+                                    cache_path=caches_path,
+                                    show_dialog=True)
+
+        if os.path.exists(caches_path):
+            print('file exists')
+
+        sp = spotipy.Spotify(auth_manager=auth_manager)
+
+        if sp:
+            user = create_spotify_user(spotipy=sp)
+
+            results = sp.current_user_top_tracks(limit=10, time_range="short_term")
+
+            for item in results['items']:
+                song = None
+
+                try:
+                    song = Song.objects.get(spotify_id=item['id'])
+                except Song.DoesNotExist:
+                    pass
+
+                try:
+                    song = Song.objects.get(title=item['name'])
+                except Song.DoesNotExist:
+                    pass
+
+                if song is None:
+                    print('here1')
+
+                    artist = create_artist(artist_id=item['artists'][0]['id'], spotipy=sp)
+                    album = create_album(album_id=item['album']['id'], artist=artist, spotipy=sp)
+                    song = create_song(track=item, artist=artist, album=album, spotipy=sp)
+
+                    print('here2')
+
+                create_user_song(user, song)
 
         else:
             print("No token")
@@ -331,7 +381,7 @@ class CallbackStaticRender(APIView):
 
     def get(self, request):
         caches_path = './.cache123'
-        scope = 'user-library-read, user-read-email, user-top-read'
+        scope = 'user-read-email, user-top-read'
 
         auth_manager = SpotifyOAuth(scope=scope,
                                     cache_path=caches_path,

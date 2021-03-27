@@ -83,19 +83,17 @@ class Song(models.Model):
     billboard = models.BooleanField(default=False)
     year = models.CharField(max_length=4, null=True, blank=True)
     duration_ms = models.IntegerField(null=True, blank=True)
-
     bpm = models.FloatField(blank=True, null=True)
-    key = models.IntegerField(null=True, blank=True)
-    mode = models.IntegerField(null=True, blank=True)
-    time_signature = models.IntegerField(null=True, blank=True)
-    acousticness = models.FloatField(blank=True, null=True)
-    danceability = models.FloatField(blank=True, null=True)
-    energy = models.FloatField(blank=True, null=True)
-    instrumentalness = models.FloatField(blank=True, null=True)
-    liveness = models.FloatField(blank=True, null=True)
-    loudness = models.FloatField(blank=True, null=True)
-    speechiness = models.FloatField(blank=True, null=True)
-    valence = models.FloatField(blank=True, null=True)
+
+    def __str__(self):
+        return self.title + " - " + self.artist.name
+
+class UserSong(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    song = models.ForeignKey(Song, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.user.name + " - " + self.song.title
 
 
 

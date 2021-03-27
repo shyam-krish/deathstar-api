@@ -1,4 +1,4 @@
-from .models import Artist, Album, Track, User, UserTrack
+from .models import Artist, Album, Track, User, UserTrack, Song, UserSong
 
 
 def create_spotify_user(spotipy):
@@ -52,8 +52,6 @@ def create_track(track, artist, album, spotipy):
     track_popularity = track['popularity']
     track_duration_ms = track['duration_ms']
 
-    print(track_title)
-
     audio_features_list = spotipy.audio_features([track_spotify_id])
     audio_features = audio_features_list[0]
 
@@ -81,10 +79,36 @@ def create_track(track, artist, album, spotipy):
     return track
 
 def create_user_track(user, track):
-    user_track = UserTrack.objects.create(user=user, track=track)
+    user_track = UserTrack(user=user, track=track)
     user_track.save()
 
     return user_track
+
+def create_song(track, artist, album, spotipy):
+    track_spotify_id = track['id']
+
+    audio_features_list = spotipy.audio_features([track_spotify_id])
+    audio_features = audio_features_list[0]
+
+    song, created = Song.objects.get_or_create(
+        spotify_id=track_spotify_id,
+        defaults={'title': track['name'],
+                  'duration_ms': track['duration_ms'],
+                  'artist': artist,
+                  'album': album,
+                  'bpm': audio_features['tempo']},
+    )
+
+    return song
+
+def create_user_song(user, song):
+    user_song, created = UserSong.objects.get_or_create(
+        user=user,
+        song=song,
+    )
+
+    return user_song
+
 
 
 
