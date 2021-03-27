@@ -1,8 +1,5 @@
 from django.db import models
 
-from django.utils.translation import gettext_lazy as _
-
-#rename to Spotify prefix
 class User(models.Model):
 
     USER_TYPES = [
@@ -77,15 +74,29 @@ class UserTrack(models.Model):
     def __str__(self):
         return self.user.name + " - " + self.track.title
 
-class Songs(models.Model):
+class Song(models.Model):
     title = models.CharField(max_length=255, null=True, blank=True)
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True, blank=True)
     album = models.ForeignKey(Album, on_delete=models.CASCADE, null=True, blank=True)
     filepath = models.CharField(max_length=255, null=True, blank=True)
-    spotify_id = models.CharField(max_length=255, unique=True)
+    spotify_id = models.CharField(max_length=255, null=True, blank=True)
     billboard = models.BooleanField(default=False)
     year = models.CharField(max_length=4, null=True, blank=True)
-    bpm = models.FloatField(blank=True, null=True)
     duration_ms = models.IntegerField(null=True, blank=True)
+
+    bpm = models.FloatField(blank=True, null=True)
+    key = models.IntegerField(null=True, blank=True)
+    mode = models.IntegerField(null=True, blank=True)
+    time_signature = models.IntegerField(null=True, blank=True)
+    acousticness = models.FloatField(blank=True, null=True)
+    danceability = models.FloatField(blank=True, null=True)
+    energy = models.FloatField(blank=True, null=True)
+    instrumentalness = models.FloatField(blank=True, null=True)
+    liveness = models.FloatField(blank=True, null=True)
+    loudness = models.FloatField(blank=True, null=True)
+    speechiness = models.FloatField(blank=True, null=True)
+    valence = models.FloatField(blank=True, null=True)
+
+
 
 

@@ -15,6 +15,7 @@ from spotipy.oauth2 import SpotifyOAuth
 from .models import Artist, Album, Track, User, UserTrack
 from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, UserSerializer, UserTrackSerializer, \
     UrlSerializer, UserTrackTrackSerializer
+from .utils import *
 
 dev_url = 'http://127.0.0.1:8000'
 prod_url = 'https://chopshop-api.herokuapp.com'
@@ -74,50 +75,6 @@ class SingleTrack(APIView):
 
         return Response(serializers.data)
 
-
-class SpotifyUser(APIView):
-
-    def post(self, request):
-        caches_path = './.cache-123'
-        scope = 'user-read-email'
-
-        auth_manager = SpotifyOAuth(scope=scope,
-                                    cache_path=caches_path,
-                                    show_dialog=True)
-
-        auth_manager.get_cached_token()
-
-        print(auth_manager.get_authorize_url())
-        print(auth_manager.client_id)
-        print('here1')
-
-        sp = spotipy.Spotify(auth_manager=auth_manager)
-        print('here2')
-
-        if sp:
-            auth_url = auth_manager.get_authorize_url()
-            print(auth_manager.get_authorize_url())
-
-            try:
-                print('here4')
-                webbrowser.open(url=auth_url, new=1, autoraise=True)
-                print('here5')
-            except webbrowser.Error:
-                return Response("Error opening browser", status=status.HTTP_400_BAD_REQUEST)
-
-            user_result = sp.current_user()
-            print('here3')
-
-            json_response = json.dumps(user_result)
-            pprint(json_response)
-
-            print(user_result['display_name'])
-        else:
-            print("No token")
-
-        return Response("User Printed", status=status.HTTP_200_OK)
-
-
 class SyncDbWithSpotifyLikedSongs(APIView):
 
     def post(self, request):
@@ -143,7 +100,7 @@ class SyncDbWithSpotifyLikedSongs(APIView):
             user_name = user_result['display_name']
             user_email = user_result['email']
 
-            user_db, created = User.objects.get_or_create(
+            user, created = User.objects.get_or_create(
                 spotify_id=user_spotify_id,
                 defaults={'name': user_name,
                           'email': user_email},
@@ -179,97 +136,21 @@ class SyncDbWithSpotifyLikedSongs(APIView):
                     if track_queryset:
                         try:
                             print('Getting User Track')
-                            user_track = UserTrack.objects.get(user=user_db, track=track_queryset)
+                            user_track = UserTrack.objects.get(user=user, track=track_queryset)
                         except UserTrack.DoesNotExist:
                             print('user track does not exist')
-                            user_track = UserTrack(user=user_db, track=track_queryset)
+                            user_track = UserTrack(user=user, track=track_queryset)
                             user_track.save()
 
                     if track_queryset is None:
                         print('here1')
 
-                        # CREATE ARTIST #
-                        artist_spotify_id = track['artists'][0]['id']
-                        artist = sp.artist(artist_spotify_id)
-                        artist_name = artist['name']
-                        artist_popularity = artist['popularity']
-                        artist_followers_total = artist['followers']['total']
-
-                        artist_db, created = Artist.objects.get_or_create(
-                            spotify_id=artist_spotify_id,
-                            defaults={'name': artist_name,
-                                      'popularity': artist_popularity,
-                                      'followers_total': artist_followers_total},
-                        )
+                        artist = create_artist(track, sp)
+                        album = create_album(track, artist, sp)
+                        track = create_track(track, artist, album, sp)
+                        create_user_track(user, track)
 
                         print('here2')
-
-                        # CREATE ALBUM #
-                        album_spotify_id = track['album']['id']
-                        album = sp.album(album_spotify_id)
-                        album_name = album['name']
-                        album_popularity = album['popularity']
-                        album_release_date = album['release_date']
-
-                        album_db, created = Album.objects.get_or_create(
-                            spotify_id=album_spotify_id,
-                            defaults={'name': album_name,
-                                      'artist': artist_db,
-                                      'popularity': album_popularity},
-                        )
-
-                        print('here3')
-
-                        # CREATE TRACK #
-                        track_spotify_id = track['id']
-                        track_title = track['name']
-                        track_popularity = track['popularity']
-                        track_duration_ms = track['duration_ms']
-
-                        audio_features_list = sp.audio_features([track_spotify_id])
-                        audio_features = audio_features_list[0]
-
-                        track_key = audio_features['key']
-                        track_mode = audio_features['mode']
-                        track_time_signature = audio_features['time_signature']
-                        track_acousticness = audio_features['acousticness']
-                        track_danceability = audio_features['danceability']
-                        track_energy = audio_features['energy']
-                        track_instrumentalness = audio_features['instrumentalness']
-                        track_liveness = audio_features['liveness']
-                        track_loudness = audio_features['loudness']
-                        track_speechiness = audio_features['speechiness']
-                        track_valence = audio_features['valence']
-                        track_tempo = audio_features['tempo']
-
-                        track_db, created = Track.objects.get_or_create(
-                            spotify_id=track_spotify_id,
-                            defaults={'title': track_title,
-                                      'popularity': track_popularity,
-                                      'duration_ms': track_duration_ms,
-                                      'artist': artist_db,
-                                      'album': album_db,
-                                      'key': track_key,
-                                      'mode': track_mode,
-                                      'time_signature': track_time_signature,
-                                      'acousticness': track_acousticness,
-                                      'danceability': track_danceability,
-                                      'energy': track_energy,
-                                      'instrumentalness': track_instrumentalness,
-                                      'liveness': track_liveness,
-                                      'loudness': track_loudness,
-                                      'speechiness': track_speechiness,
-                                      'valence': track_valence,
-                                      'tempo': track_tempo},
-                        )
-
-                        print('here4')
-
-                        # CREATE USER TRACK #
-                        user_track = UserTrack.objects.create(user=user_db, track=track_db)
-                        user_track.save()
-
-                        print('here5')
 
                 #offset += 50
         else:
@@ -281,6 +162,62 @@ class SyncDbWithSpotifyLikedSongs(APIView):
             os.remove(caches_path)
 
         return Response("Added Songs", status=status.HTTP_200_OK)
+
+
+class SyncDbWithSpotifyUserTopSongs(APIView):
+
+    def post(self, request):
+        caches_path = './.cache123'
+        scope = 'user-library-read, user-read-email, user-top-read'
+
+        auth_manager = SpotifyOAuth(scope=scope,
+                                    cache_path=caches_path,
+                                    show_dialog=True)
+
+        if os.path.exists(caches_path):
+            print('file exists')
+
+        sp = spotipy.Spotify(auth_manager=auth_manager)
+
+        if sp:
+            user = create_spotify_user(spotipy=sp)
+
+            results = sp.current_user_top_tracks(limit=1, time_range="short_term")
+            print(results)
+
+            for item in results['items']:
+                try:
+                    track_from_db = Track.objects.get(spotify_id=item['id'])
+                except Track.DoesNotExist:
+                    track_from_db = None
+
+                if track_from_db:
+                    try:
+                        print('Getting UserTrack')
+                        user_track = UserTrack.objects.get(user=user, track=track_from_db)
+                    except UserTrack.DoesNotExist:
+                        print('UserTrack does not exist')
+                        create_user_track(user=user, track=track_from_db)
+
+                else:
+                    print('here1')
+
+                    artist = create_artist(artist_id=item['artists'][0]['id'], spotipy=sp)
+                    album = create_album(album_id=item['album']['id'], artist=artist, spotipy=sp)
+                    created_track = create_track(track=item, artist=artist, album=album, spotipy=sp)
+                    create_user_track(user=user, track=created_track)
+
+                    print('here2')
+
+        else:
+            print("No token")
+            return Response("No token", status=status.HTTP_200_OK)
+
+        if os.path.exists(caches_path):
+            print('removing file')
+            os.remove(caches_path)
+
+        return Response("Added Top Songs For User", status=status.HTTP_200_OK)
 
 
 class CuratePlaylist(APIView):
@@ -394,7 +331,7 @@ class CallbackStaticRender(APIView):
 
     def get(self, request):
         caches_path = './.cache123'
-        scope = 'user-library-read, user-read-email'
+        scope = 'user-library-read, user-read-email, user-top-read'
 
         auth_manager = SpotifyOAuth(scope=scope,
                                     cache_path=caches_path,
@@ -404,7 +341,7 @@ class CallbackStaticRender(APIView):
         if code:
             print('here1')
             auth_manager.get_access_token(code=code)
-            return HttpResponseRedirect(redirect_to=prod_url + '/api/v1/callback/')
+            return HttpResponseRedirect(redirect_to=dev_url + '/api/v1/callback/')
 
         if not auth_manager.get_cached_token():
             # Step 2. Display sign in link when no token
