@@ -9,6 +9,7 @@
 .spotify_cache
 env
 api/migrations/*
+deathstar/settings.py
 
 # Accept these files in the repository
 !.gitignore
