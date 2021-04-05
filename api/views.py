@@ -439,7 +439,7 @@ class Callback(APIView):
             print('code: ' + code)
             auth_manager.get_access_token(code=code)
             print('redirecting..')
-            redirect_url = dev_url + '/screen3/'
+            redirect_url = dev_url + '/success.html'
             return HttpResponseRedirect(redirect_to=redirect_url)
 
         if not auth_manager.get_cached_token():
