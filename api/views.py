@@ -15,7 +15,7 @@ from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, Use
 from .utils import *
 
 dev_url = 'http://127.0.0.1:8080'
-prod_url = 'https://chopshop-api.herokuapp.com'
+prod_url = 'http://ec2-18-206-163-235.compute-1.amazonaws.com'
 
 spotify_cache_folder = './.spotify_cache/'
 
