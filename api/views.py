@@ -1,5 +1,6 @@
 import os
 
+import uuid
 import spotipy
 import spotipy.util as util
 from django.http import HttpResponseRedirect
@@ -13,8 +14,10 @@ from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, Use
     UserTrackTrackSerializer
 from .utils import *
 
-dev_url = 'http://127.0.0.1:8000'
+dev_url = 'http://127.0.0.1:8080'
 prod_url = 'https://chopshop-api.herokuapp.com'
+
+spotify_cache_folder = './.spotify_cache/'
 
 class UserList(APIView):
 
@@ -218,15 +221,25 @@ class SyncSpotifyUserTopTracks(APIView):
 class SyncSpotifyUserTopSongs(APIView):
 
     def post(self, request):
-        caches_path = './.cache123'
+
+        try:
+            print('Getting cache id from session..')
+            cache = request.session['cache_id']
+        except KeyError:
+            print('Could not get cache')
+            return Response('Could not get cache', status=status.HTTP_400_BAD_REQUEST)
+            # return Response("No Cache", status=status.HTTP_200_OK)
+
+        cache_path = spotify_cache_folder + cache
+
+        if os.path.exists(cache_path):
+            print('file exists')
+
         scope = 'user-read-email, user-top-read'
 
         auth_manager = SpotifyOAuth(scope=scope,
-                                    cache_path=caches_path,
+                                    cache_path=cache_path,
                                     show_dialog=True)
-
-        if os.path.exists(caches_path):
-            print('file exists')
 
         sp = spotipy.Spotify(auth_manager=auth_manager)
 
@@ -262,10 +275,6 @@ class SyncSpotifyUserTopSongs(APIView):
         else:
             print("No token")
             return Response("No token", status=status.HTTP_200_OK)
-
-        if os.path.exists(caches_path):
-            print('removing file')
-            os.remove(caches_path)
 
         return Response("Added Top Songs For User", status=status.HTTP_200_OK)
 
@@ -353,56 +362,36 @@ class CreateSpotifyPlaylist(APIView):
             sp.user_playlist_create(username, name="Test Playlist", public=False, description="this is dope")
         return Response("created playlists", status=status.HTTP_200_OK)
 
-
-class Redirect(APIView):
-
-    def post(self, request):
-        caches_path = './.cache-123'
-        scope = 'user-read-email'
-
-        auth_manager = SpotifyOAuth(scope=scope,
-                                    cache_path=caches_path,
-                                    show_dialog=True)
-
-        url = {'url': auth_manager.get_authorize_url()}
-        serializer = UrlSerializer(url)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class Http(APIView):
-
-    def get(self, request):
-        return HttpResponseRedirect(redirect_to='http://127.0.0.1:8000/api/v1/callback/')
-
-
 class CallbackStaticRender(APIView):
     renderer_classes = [StaticHTMLRenderer]
 
     def get(self, request):
-        caches_path = './.cache123'
+        new_cache = str(uuid.uuid4())
+
+        cache = request.session.get('cache_id', new_cache)
+
+        cache_path = spotify_cache_folder + cache
+        print('cache_path:' + cache_path)
+
         scope = 'user-read-email, user-top-read'
 
         auth_manager = SpotifyOAuth(scope=scope,
-                                    cache_path=caches_path,
+                                    cache_path=cache_path,
                                     show_dialog=True)
 
         code = self.request.query_params.get('code')
         if code:
-            print('here1')
+            print('code: ' + code)
             auth_manager.get_access_token(code=code)
-            return HttpResponseRedirect(redirect_to=dev_url + '/api/v1/callback/')
+            print('redirecting..')
+            return HttpResponseRedirect(redirect_to='http://localhost:8080/index3.html')
 
         if not auth_manager.get_cached_token():
-            # Step 2. Display sign in link when no token
-            print('here2')
             auth_url = auth_manager.get_authorize_url()
-            print(auth_url)
 
             data = f'<h2><a href="{auth_url}">Sign in</a></h2>'
             return Response(data)
 
-        print('here3')
         spotify = spotipy.Spotify(auth_manager=auth_manager)
         user_result = spotify.current_user()
 
@@ -414,3 +403,81 @@ class CallbackStaticRender(APIView):
         data += '</body></html>'
         
         return Response(data)
+
+
+class Callback(APIView):
+
+    def get(self, request):
+        new_cache = str(uuid.uuid4())
+        print('New UUID: ' + new_cache)
+
+        try:
+            cache = request.session['cache_id']
+            print('cache exists')
+        except KeyError:
+            print('new cache')
+            request.session['cache_id'] = new_cache
+            cache = request.session['cache_id']
+
+        cache_path = spotify_cache_folder + cache
+        print('cache_path: ' + cache_path)
+
+        if os.path.exists(cache_path):
+            print('cache file exists')
+        else:
+            print('cache file does not exist')
+
+        scope = 'user-read-email, user-top-read'
+
+        auth_manager = SpotifyOAuth(scope=scope,
+                                    cache_path=cache_path,
+                                    show_dialog=True)
+
+        code = self.request.query_params.get('code')
+        print(code)
+        if code:
+            print('code: ' + code)
+            auth_manager.get_access_token(code=code)
+            print('redirecting..')
+            redirect_url = dev_url + '/screen3/'
+            return HttpResponseRedirect(redirect_to=redirect_url)
+
+        if not auth_manager.get_cached_token():
+            url = {'url': auth_manager.get_authorize_url()}
+            serializer = UrlSerializer(url)
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            url = {'url': auth_manager.get_authorize_url()}
+            serializer = UrlSerializer(url)
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response("ERROR", status=status.HTTP_400_BAD_REQUEST)
+
+
+class Session(APIView):
+
+    def get(self, request):
+        # print('\n-------------')
+        # print('Printing session:')
+        # visits = request.session.get('num_visits', 1)
+        # request.session['num_visits'] = visits + 1
+        # print(visits)
+        #
+        # new_cache = str(uuid.uuid4())
+        # try:
+        #     cache = request.session['cache_id']
+        #     print('cache exists')
+        # except KeyError:
+        #     print('new cache')
+        #     request.session['cache_id'] = new_cache
+        #     cache = request.session['cache_id']
+        #
+        # print(cache)
+        # print('-------------\n')
+
+        request.session.flush()
+        print('cache flushed')
+
+        return Response("printed", status=status.HTTP_200_OK)

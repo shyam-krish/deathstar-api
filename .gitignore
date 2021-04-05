@@ -6,6 +6,7 @@
 .cache*
 .DS_Store
 .idea
+.spotify_cache
 env
 api/migrations/*
 
