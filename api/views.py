@@ -18,7 +18,7 @@ from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, Use
 from .utils import *
 
 dev_url = 'http://127.0.0.1:8080'
-prod_url = 'http://ec2-18-206-163-235.compute-1.amazonaws.com'
+prod_url = 'http://ec2-18-206-163-235.compute-1.amazonaws.com/test'
 
 spotify_cache_folder = './.spotify_cache/'
 
@@ -450,7 +450,7 @@ class Callback(APIView):
             print('code: ' + code)
             auth_manager.get_access_token(code=code)
             print('redirecting..')
-            redirect_url = dev_url + '/success.html'
+            redirect_url = prod_url + '/success.html'
             return HttpResponseRedirect(redirect_to=redirect_url)
 
         if not auth_manager.get_cached_token():
