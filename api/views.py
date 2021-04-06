@@ -1,6 +1,6 @@
 import os
-
 import uuid
+
 import spotipy
 import spotipy.util as util
 from django.http import HttpResponseRedirect
@@ -9,6 +9,9 @@ from rest_framework.renderers import StaticHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from spotipy.oauth2 import SpotifyOAuth
+
+from datetime import datetime
+
 
 from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, UserSerializer, UrlSerializer, \
     UserTrackTrackSerializer
@@ -224,6 +227,7 @@ class SyncSpotifyUserTopSongs(APIView):
 
         try:
             print('Getting cache id from session..')
+            print(request.session['cache_id'])
             cache = request.session['cache_id']
         except KeyError:
             print('Could not get cache')
@@ -248,6 +252,8 @@ class SyncSpotifyUserTopSongs(APIView):
 
             results = sp.current_user_top_tracks(limit=10, time_range="short_term")
 
+            print('Top 10 user tracks results: ' + results)
+
             for item in results['items']:
                 song = None
 
@@ -262,13 +268,13 @@ class SyncSpotifyUserTopSongs(APIView):
                     pass
 
                 if song is None:
-                    print('here1')
+                    print('Song does not exist in db')
 
                     artist = create_artist(artist_id=item['artists'][0]['id'], spotipy=sp)
                     album = create_album(album_id=item['album']['id'], artist=artist, spotipy=sp)
                     song = create_song(track=item, artist=artist, album=album, spotipy=sp)
 
-                    print('here2')
+                    print('Persisted artist, album and song')
 
                 create_user_song(user, song)
 
@@ -408,6 +414,11 @@ class CallbackStaticRender(APIView):
 class Callback(APIView):
 
     def get(self, request):
+        now = datetime.now()
+
+        current_time = now.strftime("%H:%M:%S")
+        print("Current Time =", current_time)
+
         new_cache = str(uuid.uuid4())
         print('New UUID: ' + new_cache)
 
