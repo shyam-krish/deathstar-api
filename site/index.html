@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="./css/style.css" />
+        <link rel="shortcut icon" href="./images/logo.png" type="image/png" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,500&display=swap"
+            rel="stylesheet"
+        />
+        <title>Screen 1</title>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script>
+        $(document).ready(function(){
+            $.ajax({
+                type: "GET",
+                url: "http://ec2-18-206-163-235.compute-1.amazonaws.com/api/v1/callback2/",
+                //url: "http://127.0.0.1:8000/api/v1/callback2/",
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function(data) {
+                    var url = data.url;
+                    console.log(url);
+                    var link = $('.spotifyLink');
+                    link.append('<a class="btn" href="' + url + '"><h2 class="heading">Sync Spotify</h2><img src="./images/spotify.svg" alt="Spotify logo" /></a>');
+                    
+                }
+            });
+        });
+        </script>
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <img class="main logo" src="./images/logo.png" alt="Logo" />
+                <img
+                    class="red logo"
+                    src="./images/redlogo.png"
+                    alt="Red logo Text"
+                />
+            </div>
+            <hr class="hr" />
+        </header>
+        <section class="content">
+            <h2 class="heading">
+                As the legendary Pusha T says, "If you know, you know"...
+            </h2>
+            <p class="paragraph">
+                Over the years, I've received countless emails, text messages
+                and phone calls from fans, friends and family asking me to make
+                a remix of the latest song they heard or a song by their
+                favorite artists. To make this process easier for all of us, we
+                decided to roll out this new feature that will give me direct
+                access to all your favorite songs, artists and albums so that I
+                can hit you guys with the dopest remixes tailored to your
+                specific tastes.
+            </p>
+            <p class="getStarted">Click below to get started!</p>
+            <div class="spotifyLink">
+                
+            </div>
+        </section>
+    </body>
+</html>

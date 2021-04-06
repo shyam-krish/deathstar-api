@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="./css/style.css" />
+        <link rel="shortcut icon" href="./images/logo.png" type="image/png" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,500&display=swap"
+            rel="stylesheet"
+        />
+        <title>Screen 3</title>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script>
+            $(document).ready(function(){
+                $.ajax({
+                    type: "POST",
+                    //url: "http://127.0.0.1:8000/api/v1/sync-spotify-top-songs/",
+                    url: "http://ec2-18-206-163-235.compute-1.amazonaws.com/api/v1/sync-spotify-top-songs/",
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    success: function(data) {
+                        console.log('Success');
+                    },
+                    error: function() {
+                        console.log('Error');
+                    } 
+                })
+            });
+        </script>
+
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <img class="main logo" src="./images/logo.png" alt="Logo" />
+                <img
+                    class="red logo"
+                    src="./images/redlogo.png"
+                    alt="Red logo Text"
+                />
+            </div>
+            <hr class="hr" />
+        </header>
+        <section class="content">
+            <div class="alert">
+                <img src="./images/spotify.svg" alt="Spotify logo" />
+                <h2 class="heading">Sync Spotify</h2>
+            </div>
+            <p class="paragraph">
+                Thank you! Whether you're a new listener or you've been with
+                me from the beginning in 2006, I can't express how much
+                gratitude I have for your support. I'm looking forward to
+                serving you with even more musical excellence as we continue
+                this journey.
+            </p>
+            <p class="getStarted">
+                You may now close this page or click below to get back to the
+                music
+            </p>
+            <div class="links">
+                <a href="#" class="link">
+                    <img
+                        src="./images/S.O.S ALBUM 1.6.jpg"
+                        alt="SOS Album"
+                    /> </a
+                ><a href="#" class="link">
+                    <img
+                        src="./images/19-P1 Bhangra Street Heat.png"
+                        alt="Bhangra Street Heat Album"
+                    /> </a
+                ><a href="#" class="link">
+                    <img
+                        src="./images/19-P3 Bollywood Bounce.png"
+                        alt="Bollywood Bounce Album"
+                    /> </a
+                ><a href="#" class="link">
+                    <img
+                        src="./images/19-P2 Best of Bhangra Dance Team Mixes.png"
+                        alt="Best of Bhangra Dance Team Mixes"
+                    />
+                </a>
+            </div>
+        </section>
+    </body>
+</html>
