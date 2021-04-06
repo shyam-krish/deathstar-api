@@ -252,7 +252,7 @@ class SyncSpotifyUserTopSongs(APIView):
 
             results = sp.current_user_top_tracks(limit=10, time_range="short_term")
 
-            print('Top 10 user tracks results: ' + results)
+            print(results)
 
             for item in results['items']:
                 song = None
